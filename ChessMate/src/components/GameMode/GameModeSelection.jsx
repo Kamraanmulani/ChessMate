@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   FaUsers, 
   FaRobot, 
-  FaClock, 
-  FaBolt, 
-  FaChessBoard, 
   FaArrowLeft,
   FaStar,
-  FaTrophy,
   FaGamepad
 } from 'react-icons/fa';
 import './GameModeSelection.css';
 
-const GameModeSelection = ({ onBack, onSelectMode }) => {
+const GameModeSelection = () => {
   const [selectedMode, setSelectedMode] = useState(null);
-  const [selectedTimeControl, setSelectedTimeControl] = useState('10+0');
+  const navigate = useNavigate();
 
   const gameModes = [
     {
@@ -36,15 +33,6 @@ const GameModeSelection = ({ onBack, onSelectMode }) => {
       description: 'Practice and improve against our advanced chess engine',
       features: ['Multiple difficulty levels', 'Instant gameplay', 'Perfect for learning']
     }
-  ];
-
-  const timeControls = [
-    { id: '1+0', label: '1 min', type: 'Bullet', icon: FaBolt },
-    { id: '3+0', label: '3 min', type: 'Blitz', icon: FaClock },
-    { id: '5+0', label: '5 min', type: 'Blitz', icon: FaClock },
-    { id: '10+0', label: '10 min', type: 'Rapid', icon: FaChessBoard },
-    { id: '15+10', label: '15+10', type: 'Rapid', icon: FaChessBoard },
-    { id: '30+0', label: '30 min', type: 'Classical', icon: FaTrophy }
   ];
 
   const containerVariants = {
@@ -79,12 +67,18 @@ const GameModeSelection = ({ onBack, onSelectMode }) => {
   };
 
   const handleStartGame = () => {
-    if (selectedMode && selectedTimeControl) {
-      onSelectMode({
-        mode: selectedMode,
-        timeControl: selectedTimeControl
-      });
+    if (selectedMode) {
+      // Navigate to the appropriate game page based on selected mode
+      if (selectedMode === 'ai') {
+        navigate('/gamestartsAI');
+      } else if (selectedMode === 'multiplayer') {
+        navigate('/gamestartsPvP');
+      }
     }
+  };
+
+  const handleBackToHome = () => {
+    navigate('/');
   };
 
   return (
@@ -97,7 +91,7 @@ const GameModeSelection = ({ onBack, onSelectMode }) => {
       >
         {/* Header */}
         <motion.div className="game-mode-header" variants={cardVariants}>
-          <button className="back-button" onClick={onBack}>
+          <button className="back-button" onClick={handleBackToHome}>
             <FaArrowLeft />
             <span>Back to Home</span>
           </button>
@@ -154,43 +148,8 @@ const GameModeSelection = ({ onBack, onSelectMode }) => {
           ))}
         </motion.div>
 
-        {/* Time Control Selection */}
-        {selectedMode && (
-          <motion.div 
-            className="time-control-section"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2>Select Time Control</h2>
-            <div className="time-controls-grid">
-              {timeControls.map((control) => (
-                <motion.button
-                  key={control.id}
-                  className={`time-control-card ${selectedTimeControl === control.id ? 'selected' : ''}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedTimeControl(control.id)}
-                >
-                  <control.icon className="time-icon" />
-                  <div className="time-info">
-                    <span className="time-label">{control.label}</span>
-                    <span className="time-type">{control.type}</span>
-                  </div>
-                  {selectedTimeControl === control.id && (
-                    <motion.div 
-                      className="time-selected-indicator"
-                      layoutId="timeSelected"
-                    />
-                  )}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
         {/* Start Game Button */}
-        {selectedMode && selectedTimeControl && (
+        {selectedMode && (
           <motion.div 
             className="start-game-section"
             initial={{ opacity: 0, y: 20 }}

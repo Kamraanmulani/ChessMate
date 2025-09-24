@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import gameRoutes from './routes/gameRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Load environment variables
@@ -61,6 +62,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/game', gameRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

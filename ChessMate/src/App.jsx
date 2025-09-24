@@ -1,60 +1,27 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
 import { AuthProvider } from './contexts/AuthContext'
-import Header from './components/Header'
-import Hero from './components/Hero'
-import Features from './components/Features'
-import HowItWorks from './components/HowItWorks'
-import Footer from './components/Footer'
+import HomePage from './pages/HomePage'
 import GameModeSelection from './components/GameMode/GameModeSelection'
+import Game from './components/Game/Game'
+import GameAI from './components/Game/GameAI'
+import GamePvP from './components/Game/GamePvP'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [gameConfig, setGameConfig] = useState(null);
-
-  const handleStartPlaying = () => {
-    setCurrentPage('gameMode');
-  };
-
-  const handleBackToHome = () => {
-    setCurrentPage('home');
-  };
-
-  const handleGameModeSelect = (config) => {
-    setGameConfig(config);
-    // In a real app, this would navigate to the actual game page
-    console.log('Starting game with config:', config);
-    alert(`Starting ${config.mode} game with ${config.timeControl} time control!`);
-  };
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'gameMode':
-        return (
-          <GameModeSelection 
-            onBack={handleBackToHome}
-            onSelectMode={handleGameModeSelect}
-          />
-        );
-      case 'home':
-      default:
-        return (
-          <>
-            <Header />
-            <Hero onStartPlaying={handleStartPlaying} />
-            <Features />
-            <HowItWorks />
-            <Footer />
-          </>
-        );
-    }
-  };
-
   return (
     <AuthProvider>
-      <div className="App">
-        {renderPage()}
-      </div>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/gamemode" element={<GameModeSelection />} />
+            <Route path="/gamestarts" element={<Game />} />
+            <Route path="/gamestartsAI" element={<GameAI />} />
+            <Route path="/gamestartsPvP" element={<GamePvP />} />
+          </Routes>
+        </div>
+      </Router>
     </AuthProvider>
   )
 }
