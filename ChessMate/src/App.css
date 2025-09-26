@@ -1,8 +1,13 @@
+
 /* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+#chessboard-board{
+  WIDTH : 35rem !important;
 }
 
 :root {
