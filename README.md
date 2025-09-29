@@ -3,7 +3,49 @@
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.11.0-green.svg)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-blue.svg)](https://www.postgresql.org/)
-[![Socket.IO](https://img.shields.io/badge/Socket.I## 🛠️ Tech Stack
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-black.svg)](https://socket.io/)
+[![Chess.js](https://img.shields.io/badge/Chess.js-1.4.0-orange.svg)](https://github.com/jhlywa/chess.js)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## 🎯 About ChessMate
+
+ChessMate is a cutting-edge, full-stack chess platform that combines strategic gameplay with modern web technology. Built with React.js 19.1.1 and Node.js, it delivers an immersive chess experience featuring real-time multiplayer gameplay, intelligent AI opponents, and a sleek, responsive interface designed for chess enthusiasts of all skill levels.
+
+### ✨ Key Features
+
+- 🎮 **Complete Game Modes**: AI opponents, real-time multiplayer, and room-based gameplay
+- 🤖 **Advanced AI Engine**: Intelligent chess AI with strategic move evaluation and multiple difficulty levels
+- 🌐 **Real-time Multiplayer**: Live chess games with instant move synchronization via polling system
+- 🏠 **Room-based Gaming**: Create or join game rooms with 3-digit codes for private matches
+- 🔐 **Secure Authentication**: JWT-based user system with PostgreSQL backend
+- 📱 **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- 🎨 **Modern UI/UX**: Beautiful chess-themed interface with Framer Motion animations
+- ⚡ **Real-time Updates**: Live game state synchronization and player status tracking
+- 🎯 **Move Validation**: Complete chess rule enforcement with check/checkmate detection
+- 🎉 **Visual Effects**: Confetti celebrations, move highlighting, and smooth animations
+
+### 🚀 Game Modes Available
+
+- **🤖 Player vs AI**: Challenge our intelligent AI with strategic move evaluation
+  - Advanced piece evaluation algorithm
+  - Real-time thinking indicators
+  - Balanced difficulty for engaging gameplay
+  - Visual feedback with piece highlighting and animations
+
+- **🤝 Player vs Player (Real-time Multiplayer)**: 
+  - Create private rooms with 3-digit codes
+  - Real-time move synchronization between players
+  - Turn-based gameplay with visual turn indicators
+  - Live player status and connection monitoring
+  - Complete move history tracking
+
+- **🏠 Room Management System**:
+  - Easy room creation and joining
+  - Player color assignment (White/Black)
+  - Real-time room status updates
+  - Seamless game state management
+
+## 🛠️ Tech Stack
 
 ### Frontend
 - **React.js 19.1.1** - Modern UI framework with hooks
@@ -37,13 +79,7 @@
 - **ESLint 9.36.0** - Code linting and formatting
 - **Nodemon 3.0.2** - Development server auto-restart
 - **Git** - Version control system
-- **VS Code** - Recommended IDEg)](https://socket.io/)
-[![Chess.js](https://img.shields.io/badge/Chess.js-1.4.0-orange.svg)](https://github.com/jhlywa/chess.js)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-## 🎯 About ChessMate
-
-ChessMate is a cutting-edge, full-stack chess platform that combines strategic gameplay with modern web technology. Built with React.js 19.1.1 and Node.js, it delivers an immersive chess experience featuring real-time multiplayer gameplay, intelligent AI opponents, and a sleek, responsive interface designed for chess enthusiasts of all skill levels.
+- **VS Code** - Recommended IDE
 
 ### ✨ Key Features
 
@@ -79,29 +115,7 @@ ChessMate is a cutting-edge, full-stack chess platform that combines strategic g
   - Real-time room status updates
   - Seamless game state management
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **React.js 19.1.1** - UI Framework
-- **Framer Motion** - Animations and transitions
-- **React Icons** - Beautiful icon library
-- **Axios** - HTTP client for API calls
-- **Vite** - Fast build tool and dev server
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **PostgreSQL** - Database
-- **JWT** - Authentication
-- **BCrypt** - Password hashing
-- **Joi** - Input validation
-
-### Development Tools
-- **ESLint** - Code linting
-- **Git** - Version control
-- **VS Code** - Recommended IDE
-
-## 📁 Project Structure
+##  📁 Project Structure
 
 ```
 ChessMate/
@@ -486,28 +500,6 @@ CREATE TABLE game_rooms (
    - Check token expiration
    - Clear localStorage in browser
 
-## 🔮 Roadmap & Future Features
-
-### Phase 1 (Current)
-- ✅ User authentication system
-- ✅ AI chess opponent
-- ✅ Real-time multiplayer
-- ✅ Room-based gaming
-
-### Phase 2 (Planned)
-- [ ] WebSocket implementation for faster real-time updates
-- [ ] Chess puzzle solving mode
-- [ ] Game analysis and move suggestions
-- [ ] Tournament bracket system
-- [ ] Player ranking and ELO rating
-
-### Phase 3 (Future)
-- [ ] Mobile app development (React Native)
-- [ ] Live streaming of games
-- [ ] Chess.com API integration
-- [ ] Machine learning move prediction
-- [ ] Social features and friend systems
-
 ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
@@ -543,9 +535,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Kamraan Mulani**
 - GitHub: [@Kamraanmulani](https://github.com/Kamraanmulani)
-- Email: kamraan.mulani@example.com
 
-## 🙏 Acknowledgments
+
+
+## �🙏 Acknowledgments
 
 - **Chess.js** - Excellent chess logic library
 - **React Team** - Amazing framework and community
