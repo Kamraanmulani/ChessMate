@@ -81,40 +81,6 @@ ChessMate is a cutting-edge, full-stack chess platform that combines strategic g
 - **Git** - Version control system
 - **VS Code** - Recommended IDE
 
-### ✨ Key Features
-
-- 🎮 **Complete Game Modes**: AI opponents, real-time multiplayer, and room-based gameplay
-- 🤖 **Advanced AI Engine**: Intelligent chess AI with strategic move evaluation and multiple difficulty levels
-- 🌐 **Real-time Multiplayer**: Live chess games with instant move synchronization via polling system
-- 🏠 **Room-based Gaming**: Create or join game rooms with 3-digit codes for private matches
-- 🔐 **Secure Authentication**: JWT-based user system with PostgreSQL backend
-- 📱 **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- 🎨 **Modern UI/UX**: Beautiful chess-themed interface with Framer Motion animations
-- ⚡ **Real-time Updates**: Live game state synchronization and player status tracking
-- 🎯 **Move Validation**: Complete chess rule enforcement with check/checkmate detection
-- 🎉 **Visual Effects**: Confetti celebrations, move highlighting, and smooth animations
-
-### 🚀 Game Modes Available
-
-- **� Player vs AI**: Challenge our intelligent AI with strategic move evaluation
-  - Advanced piece evaluation algorithm
-  - Real-time thinking indicators
-  - Balanced difficulty for engaging gameplay
-  - Visual feedback with piece highlighting and animations
-
-- **� Player vs Player (Real-time Multiplayer)**: 
-  - Create private rooms with 3-digit codes
-  - Real-time move synchronization between players
-  - Turn-based gameplay with visual turn indicators
-  - Live player status and connection monitoring
-  - Complete move history tracking
-
-- **🏠 Room Management System**:
-  - Easy room creation and joining
-  - Player color assignment (White/Black)
-  - Real-time room status updates
-  - Seamless game state management
-
 ##  📁 Project Structure
 
 ```
