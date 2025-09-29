@@ -386,6 +386,127 @@ router.post('/room/:roomCode/move', (req, res) => {
   }
 });
 
+// POST /api/game/room/:roomCode/finish - Finish a game and record result
+router.post('/room/:roomCode/finish', (req, res) => {
+  try {
+    const { roomCode } = req.params;
+    const { gameResult, winnerEmail, totalMoves, gameDurationMinutes } = req.body;
+    
+    // Validate input
+    if (!gameResult) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Game result is required'
+      });
+    }
+    
+    if (!['white_wins', 'black_wins', 'draw', 'resignation', 'timeout'].includes(gameResult)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid game result'
+      });
+    }
+    
+    if (!gameRooms.has(roomCode)) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Room not found'
+      });
+    }
+    
+    const roomData = gameRooms.get(roomCode);
+    
+    if (roomData.status === 'finished') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Game already finished'
+      });
+    }
+    
+    // Validate that we have 2 players
+    if (roomData.players.length !== 2) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Game requires 2 players to finish'
+      });
+    }
+    
+    const whitePlayer = roomData.players.find(p => p.color === 'white');
+    const blackPlayer = roomData.players.find(p => p.color === 'black');
+    
+    if (!whitePlayer || !blackPlayer) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid player configuration'
+      });
+    }
+    
+    // Map resignation/timeout to actual result
+    let finalResult = gameResult;
+    let finalWinner = winnerEmail;
+    
+    if (gameResult === 'resignation' || gameResult === 'timeout') {
+      if (winnerEmail === whitePlayer.email) {
+        finalResult = 'white_wins';
+      } else if (winnerEmail === blackPlayer.email) {
+        finalResult = 'black_wins';
+      } else {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid winner for resignation/timeout'
+        });
+      }
+    }
+    
+    // Update room status
+    roomData.status = 'finished';
+    roomData.finishedAt = new Date().toISOString();
+    roomData.gameResult = finalResult;
+    roomData.winnerEmail = finalWinner;
+    roomData.lastActivity = new Date().toISOString();
+    
+    // Record game result in leaderboard (this would normally call the leaderboard API)
+    const gameResultData = {
+      roomCode: roomCode,
+      gameId: roomData.gameId,
+      playerWhiteEmail: whitePlayer.email,
+      playerBlackEmail: blackPlayer.email,
+      gameResult: finalResult,
+      totalMoves: totalMoves || roomData.moveHistory.length,
+      gameDurationMinutes: gameDurationMinutes
+    };
+    
+    // Store result for potential leaderboard sync
+    roomData.gameResultData = gameResultData;
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Game finished successfully',
+      data: {
+        roomCode: roomCode,
+        gameResult: finalResult,
+        winnerEmail: finalWinner,
+        gameResultData: gameResultData,
+        gameStats: {
+          totalMoves: gameResultData.totalMoves,
+          duration: gameDurationMinutes,
+          players: {
+            white: whitePlayer.email,
+            black: blackPlayer.email
+          }
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error finishing game:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to finish game'
+    });
+  }
+});
+
 // GET /api/game/room/:roomCode/state - Get current game state
 router.get('/room/:roomCode/state', (req, res) => {
   try {

@@ -253,6 +253,26 @@
   justify-content: flex-end;
 }
 
+.check-warning {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  font-weight: 600;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  animation: checkWarningPulse 1s ease-in-out infinite;
+}
+
+@keyframes checkWarningPulse {
+  0%, 100% {
+    background: rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    background: rgba(239, 68, 68, 0.2);
+  }
+}
+
 .player-indicator {
   font-size: 0.8rem;
   padding: 2px 8px;
@@ -407,6 +427,22 @@
   transform: translateZ(0);
 }
 
+/* King in check indicator */
+.square.king-in-check {
+  background: rgba(239, 68, 68, 0.3) !important;
+  box-shadow: inset 0 0 0 3px rgba(239, 68, 68, 0.6);
+  animation: checkPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes checkPulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3px rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: inset 0 0 0 3px rgba(239, 68, 68, 0.9);
+  }
+}
+
 /* piece style */
 .piece {
   font-size: clamp(20px, 5.8vmin, 44px); /* scales with board */
@@ -530,4 +566,372 @@
 .square:focus {
   outline: 3px solid rgba(99,102,241,0.18);
   outline-offset: -3px;
+}
+
+/* Game Controls */
+.game-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin: 1rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.game-info {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.move-counter, .game-timer {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.resign-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.resign-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-2px);
+}
+
+.resign-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Game End Modal */
+.game-end-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.game-end-modal {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(16, 33, 62, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 25px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  color: white;
+  overflow: hidden;
+}
+
+.game-end-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(78, 205, 196, 0.05));
+  border-radius: 25px;
+  z-index: -1;
+}
+
+.game-end-modal .modal-header {
+  text-align: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-end-modal .modal-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-end-modal .modal-content {
+  padding: 2rem;
+}
+
+.result-display {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.result-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.result-display h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.result-display p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.5rem;
+  text-transform: capitalize;
+}
+
+.points-awarded {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.points-awarded span {
+  display: block;
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 1.1rem;
+}
+
+.winner-points {
+  color: #28a745;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.loser-points {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.game-stats {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-item span:first-child {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-item span:last-child {
+  font-weight: 600;
+  color: #4ecdc4;
+}
+
+.game-end-modal .modal-actions {
+  padding: 1rem 2rem 2rem;
+  text-align: center;
+}
+
+.game-end-modal .modal-actions .btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.game-end-modal .modal-actions .btn.primary {
+  background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.game-end-modal .modal-actions .btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* Responsive Design for Game Controls and Modal */
+@media (max-width: 768px) {
+  .game-controls {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .game-info {
+    gap: 1rem;
+  }
+  
+  .game-end-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+  
+  .game-end-modal .modal-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .result-icon {
+    font-size: 3rem;
+  }
+  
+  .result-display h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Game End Countdown Styles */
+.game-end-countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.countdown-modal {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  border-radius: 25px;
+  padding: 3rem 2rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  min-width: 350px;
+  animation: countdownSlideIn 0.5s ease-out;
+}
+
+.countdown-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 1rem 0;
+  background: linear-gradient(45deg, #dc2626, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.countdown-content p {
+  font-size: 1.3rem;
+  color: #374151;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.countdown-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: bounceIcon 0.6s ease-out;
+}
+
+.countdown-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.countdown-number {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #dc2626;
+  line-height: 1;
+  animation: countdownPulse 1s ease-in-out infinite;
+  text-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.countdown-text {
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes countdownSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes bounceIcon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes countdownPulse {
+  0%, 100% {
+    transform: scale(1);
+    color: #dc2626;
+  }
+  50% {
+    transform: scale(1.1);
+    color: #ef4444;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdown-modal {
+    margin: 1rem;
+    padding: 2rem 1.5rem;
+    min-width: auto;
+  }
+  
+  .countdown-content h2 {
+    font-size: 2rem;
+  }
+  
+  .countdown-number {
+    font-size: 3rem;
+  }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { gameService, leaderboardService } from '../../services/gameService';
 import './GamePvP.css'; // make sure filename/casing matches
 
 const Game = () => {
@@ -45,6 +46,13 @@ const Game = () => {
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [myColor, setMyColor] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [gameResult, setGameResult] = useState(null);
+  const [showGameEndModal, setShowGameEndModal] = useState(false);
+  const [moveCount, setMoveCount] = useState(0);
+  const [gameStartTime, setGameStartTime] = useState(null);
+  const [gameEndCountdown, setGameEndCountdown] = useState(null);
+  const [countdownTimer, setCountdownTimer] = useState(null);
 
   const pieceSymbols = {
     'K': '♔','Q': '♕','R': '♖','B': '♗','N': '♘','P': '♙',
@@ -91,8 +99,36 @@ const Game = () => {
 
   // Update game started status
   useEffect(() => {
-    setGameStarted(roomStatus === 'ready' || roomStatus === 'in_progress');
-  }, [roomStatus]);
+    const wasGameStarted = gameStarted;
+    const isNowStarted = roomStatus === 'ready' || roomStatus === 'in_progress';
+    setGameStarted(isNowStarted);
+    
+    // Record game start time when game begins
+    if (!wasGameStarted && isNowStarted && !gameStartTime) {
+      setGameStartTime(Date.now());
+    }
+  }, [roomStatus, gameStarted, gameStartTime]);
+
+  // Check for game end when board state changes
+  useEffect(() => {
+    if (gameStarted && !gameEnded && gameMode === 'pvp') {
+      // Add a small delay to ensure all state updates are complete
+      const checkTimer = setTimeout(() => {
+        checkForGameEnd();
+      }, 300);
+      
+      return () => clearTimeout(checkTimer);
+    }
+  }, [board, currentPlayer, gameStarted, gameEnded, gameMode]);
+
+  // Cleanup countdown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+      }
+    };
+  }, [countdownTimer]);
 
   const fetchRoomStatus = async () => {
     if (!roomCode) return;
@@ -303,6 +339,16 @@ const Game = () => {
         console.log('Move successful:', result.data.move);
         // Immediately fetch the updated game state
         await fetchGameState();
+        
+        // Increment move count
+        setMoveCount(prev => prev + 1);
+        
+        // Check for game ending conditions after a successful move
+        // Use a small delay to ensure board state is fully updated
+        setTimeout(() => {
+          checkForGameEnd();
+        }, 500); // Reduced delay for faster detection
+        
         return true;
       } else {
         console.error('Move failed:', result.message);
@@ -314,6 +360,117 @@ const Game = () => {
       alert('Network error. Move failed. Check server connection.');
       return false;
     }
+  };
+
+  const checkForGameEnd = () => {
+    if (gameEnded || !gameStarted || gameEndCountdown !== null) return;
+    
+    const gameEndResult = gameService.checkGameEnd(board, currentPlayer, getValidMoves);
+    console.log('Game end check result:', gameEndResult);
+    
+    if (gameEndResult.gameEnded) {
+      console.log('Game ended detected:', gameEndResult);
+      
+      // Show immediate notification for checkmate/stalemate
+      if (gameEndResult.reason === 'checkmate') {
+        const winner = gameEndResult.result === 'white_wins' ? 'White' : 'Black';
+        console.log(`CHECKMATE! ${winner} wins!`);
+      } else if (gameEndResult.reason === 'stalemate') {
+        console.log('STALEMATE! Game is a draw!');
+      }
+      
+      // Start countdown display
+      setGameEndCountdown({
+        result: gameEndResult.result,
+        reason: gameEndResult.reason,
+        countdown: 3
+      });
+      
+      // Start countdown timer
+      let countdown = 3;
+      const timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          setGameEndCountdown(prev => ({ ...prev, countdown }));
+        } else {
+          clearInterval(timer);
+          setCountdownTimer(null);
+          handleGameEnd(gameEndResult.result, gameEndResult.reason);
+        }
+      }, 1000);
+      
+      setCountdownTimer(timer);
+    }
+  };
+
+  const handleGameEnd = async (result, reason) => {
+    if (gameEnded) return; // Prevent multiple endings
+    
+    // Clear countdown timer if active
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+      setCountdownTimer(null);
+    }
+    setGameEndCountdown(null);
+    
+    setGameEnded(true);
+    setGameResult({ result, reason });
+    setShowGameEndModal(true);
+    
+    // Calculate game duration
+    const gameDurationMinutes = gameStartTime ? Math.round((Date.now() - gameStartTime) / 60000) : 0;
+    
+    // Determine winner email
+    let winnerEmail = null;
+    if (result === 'white_wins') {
+      winnerEmail = players.find(p => p.color === 'white')?.email;
+    } else if (result === 'black_wins') {
+      winnerEmail = players.find(p => p.color === 'black')?.email;
+    }
+    
+    try {
+      // Finish the game on the server
+      const finishResult = await gameService.finishGame(
+        roomCode,
+        result,
+        winnerEmail,
+        moveCount,
+        gameDurationMinutes
+      );
+      
+      if (finishResult.success && finishResult.data.gameResultData) {
+        // Record result in leaderboard
+        const leaderboardResult = await leaderboardService.recordGameResult(
+          finishResult.data.gameResultData
+        );
+        
+        if (leaderboardResult.success) {
+          console.log('Game result recorded in leaderboard successfully');
+        } else {
+          console.error('Failed to record in leaderboard:', leaderboardResult.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling game end:', error);
+    }
+  };
+
+  const handleResign = async () => {
+    if (gameEnded || !gameStarted || !myColor) return;
+    
+    const opponentColor = myColor === 'white' ? 'black' : 'white';
+    const winnerEmail = players.find(p => p.color === opponentColor)?.email;
+    const result = opponentColor === 'white' ? 'white_wins' : 'black_wins';
+    
+    await handleGameEnd(result, 'resignation');
+  };
+
+  const closeGameEndModal = () => {
+    setShowGameEndModal(false);
+    // Navigate back to game mode selection after a short delay
+    setTimeout(() => {
+      navigate('/gamemode');
+    }, 1000);
   };
 
   const handleSquareClick = useCallback(async (row, col) => {
@@ -337,6 +494,17 @@ const Game = () => {
       console.log('Attempting move:', { from: [sr, sc], to: [row, col], isValidMove });
       
       if (isValidMove) {
+        // Additional check: ensure move doesn't put own king in check
+        const movingPiece = board[sr][sc];
+        const playerColor = movingPiece === movingPiece.toUpperCase() ? 'white' : 'black';
+        
+        if (gameService.wouldMoveExposeKing(board, sr, sc, row, col, playerColor)) {
+          alert('That move would put your king in check!');
+          setSelectedSquare(null);
+          setValidMoves([]);
+          return;
+        }
+        
         const success = await makeMove(sr, sc, row, col, board[sr][sc]);
         if (success) {
           // Move was processed successfully
@@ -365,14 +533,24 @@ const Game = () => {
       }
       
       setSelectedSquare([row,col]);
-      const moves = getValidMoves(piece, row, col, board);
-      setValidMoves(moves);
-      console.log('Selected piece:', piece, 'Valid moves:', moves);
+      // Use legal moves instead of just valid moves (considering check)
+      const legalMoves = gameService.getLegalMoves(piece, row, col, board, getValidMoves);
+      setValidMoves(legalMoves);
+      console.log('Selected piece:', piece, 'Legal moves:', legalMoves);
     }
   }, [board, selectedSquare, currentPlayer, validMoves, gameMode, gameStarted, isMyTurn, myColor, roomCode, playerEmail, gameState]);
 
   const isHighlighted = (r,c) => selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c;
   const isValidMoveSquare = (r,c) => validMoves.some(([rr,cc]) => rr===r && cc===c);
+  
+  // Check if a square contains a king in check
+  const isKingInCheck = (r, c) => {
+    const piece = board[r][c];
+    if (!piece || piece.toLowerCase() !== 'k') return false;
+    
+    const kingColor = piece === piece.toUpperCase() ? 'white' : 'black';
+    return gameService.isKingInCheck(board, kingColor, [r, c]);
+  };
 
   return (
     <div className="chess-app">
@@ -482,6 +660,12 @@ const Game = () => {
                 {isMyTurn ? ' (Your turn!)' : ` (${myColor === 'white' ? 'Black' : 'White'}'s turn)`}
               </span>
             )}
+            {/* Check warning */}
+            {gameService.isKingInCheck(board, currentPlayer) && (
+              <span className="check-warning">
+                ⚠️ CHECK!
+              </span>
+            )}
           </div>
           
           {/* Last Move Information */}
@@ -517,8 +701,9 @@ const Game = () => {
               const squareClasses = [
                 (ri + ci) % 2 === 0 ? 'light' : 'dark',
                 isHighlighted(ri,ci) ? 'selected' : '',
-                isValidMoveSquare(ri,ci) ? 'valid-move' : ''
-              ].join(' ');
+                isValidMoveSquare(ri,ci) ? 'valid-move' : '',
+                isKingInCheck(ri, ci) ? 'king-in-check' : ''
+              ].filter(Boolean).join(' ');
               return (
                 <button
                   key={`${ri}-${ci}`}
@@ -536,6 +721,132 @@ const Game = () => {
         </div>
       </main>
 
+      {/* Game Controls */}
+      {gameMode === 'pvp' && gameStarted && !gameEnded && (
+        <div className="game-controls">
+          <div className="game-info">
+            <div className="move-counter">
+              Moves: {Math.floor(moveCount / 2) + 1}
+            </div>
+            {gameStartTime && (
+              <div className="game-timer">
+                Duration: {Math.floor((Date.now() - gameStartTime) / 60000)}m
+              </div>
+            )}
+          </div>
+          <div className="control-buttons">
+            <button 
+              className="btn resign-btn" 
+              onClick={handleResign}
+              disabled={!isMyTurn}
+            >
+              Resign
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Game End Countdown */}
+      {gameEndCountdown && (
+        <div className="game-end-countdown-overlay">
+          <div className="countdown-modal">
+            <div className="countdown-content">
+              {gameEndCountdown.reason === 'checkmate' ? (
+                <>
+                  <div className="countdown-icon">👑</div>
+                  <h2>CHECKMATE!</h2>
+                  <p>
+                    {gameEndCountdown.result === 'white_wins' ? 'White' : 'Black'} Wins!
+                  </p>
+                </>
+              ) : gameEndCountdown.reason === 'stalemate' ? (
+                <>
+                  <div className="countdown-icon">🤝</div>
+                  <h2>STALEMATE!</h2>
+                  <p>Game is a Draw!</p>
+                </>
+              ) : (
+                <>
+                  <div className="countdown-icon">🏁</div>
+                  <h2>Game Over!</h2>
+                  <p>Reason: {gameEndCountdown.reason}</p>
+                </>
+              )}
+              
+              <div className="countdown-timer">
+                <div className="countdown-number">{gameEndCountdown.countdown}</div>
+                <div className="countdown-text">Game ending in...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game End Modal */}
+      {showGameEndModal && gameResult && (
+        <div className="game-end-modal-overlay">
+          <div className="game-end-modal">
+            <div className="modal-header">
+              <h2>Game Over!</h2>
+            </div>
+            <div className="modal-content">
+              <div className="result-display">
+                {gameResult.result === 'draw' ? (
+                  <>
+                    <div className="result-icon">🤝</div>
+                    <h3>It's a Draw!</h3>
+                    <p>Reason: {gameResult.reason}</p>
+                    <div className="points-awarded">
+                      <span>Both players earned 50 points</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="result-icon">
+                      {gameResult.result === 'white_wins' ? '♔' : '♚'}
+                    </div>
+                    <h3>
+                      {gameResult.result === 'white_wins' ? 'White' : 'Black'} Wins!
+                    </h3>
+                    <p>Reason: {gameResult.reason}</p>
+                    <div className="points-awarded">
+                      <div className="winner-points">
+                        Winner: +100 points
+                      </div>
+                      <div className="loser-points">
+                        Loser: +0 points
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div className="game-stats">
+                <div className="stat-item">
+                  <span>Total Moves:</span>
+                  <span>{moveCount}</span>
+                </div>
+                <div className="stat-item">
+                  <span>Duration:</span>
+                  <span>
+                    {gameStartTime ? Math.floor((Date.now() - gameStartTime) / 60000) : 0}m
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span>Your Color:</span>
+                  <span>{myColor}</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn primary" onClick={closeGameEndModal}>
+                Back to Game Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="controls">
         <button 
           className="btn" 
@@ -550,6 +861,10 @@ const Game = () => {
               setSelectedSquare(null);
               setValidMoves([]);
               setCurrentPlayer('white');
+              setGameEnded(false);
+              setGameResult(null);
+              setMoveCount(0);
+              setGameStartTime(null);
             }
           }}
           disabled={gameMode === 'pvp' && !gameStarted}

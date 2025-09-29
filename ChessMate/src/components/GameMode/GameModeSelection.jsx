@@ -10,18 +10,23 @@ import {
   FaSignInAlt,
   FaPlus,
   FaTimes,
-  FaSpinner
+  FaSpinner,
+  FaTrophy
 } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
+import Leaderboard from '../Leaderboard/Leaderboard';
 import './GameModeSelection.css';
 
 const GameModeSelection = () => {
   const [selectedMode, setSelectedMode] = useState(null);
   const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [playerEmail, setPlayerEmail] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const gameModes = [
     {
@@ -149,6 +154,14 @@ const GameModeSelection = () => {
     navigate('/');
   };
 
+  const handleShowLeaderboard = () => {
+    setShowLeaderboard(true);
+  };
+
+  const handleHideLeaderboard = () => {
+    setShowLeaderboard(false);
+  };
+
   return (
     <div className="game-mode-container">
       <motion.div 
@@ -159,10 +172,16 @@ const GameModeSelection = () => {
       >
         {/* Header */}
         <motion.div className="game-mode-header" variants={cardVariants}>
-          <button className="back-button" onClick={handleBackToHome}>
-            <FaArrowLeft />
-            <span>Back to Home</span>
-          </button>
+          <div className="header-top">
+            <button className="back-button" onClick={handleBackToHome}>
+              <FaArrowLeft />
+              <span>Back to Home</span>
+            </button>
+            <button className="leaderboard-button" onClick={handleShowLeaderboard}>
+              <FaTrophy />
+              <span>Leaderboard</span>
+            </button>
+          </div>
           <h1>Choose Your Game Mode</h1>
           <p>Select how you want to play and start your chess journey</p>
         </motion.div>
@@ -279,6 +298,34 @@ const GameModeSelection = () => {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Leaderboard Modal */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <div className="modal-overlay leaderboard-modal-overlay">
+            <motion.div 
+              className="leaderboard-modal"
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 50 }}
+              transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+            >
+              <div className="modal-header leaderboard-modal-header">
+                <h2>Global Leaderboard</h2>
+                <button className="close-modal-btn" onClick={handleHideLeaderboard}>
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="leaderboard-modal-content">
+                <Leaderboard 
+                  playerEmail={user?.email} 
+                  showHeader={false}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Join Room Modal */}
       <AnimatePresence>
