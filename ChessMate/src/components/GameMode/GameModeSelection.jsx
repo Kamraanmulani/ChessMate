@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaUsers, 
   FaRobot, 
   FaArrowLeft,
   FaStar,
-  FaGamepad
+  FaGamepad,
+  FaSignInAlt,
+  FaPlus,
+  FaTimes,
+  FaSpinner
 } from 'react-icons/fa';
 import './GameModeSelection.css';
 
 const GameModeSelection = () => {
   const [selectedMode, setSelectedMode] = useState(null);
+  const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [roomCode, setRoomCode] = useState('');
+  const [playerEmail, setPlayerEmail] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
   const navigate = useNavigate();
 
   const gameModes = [
@@ -72,9 +81,68 @@ const GameModeSelection = () => {
       if (selectedMode === 'ai') {
         navigate('/gamestartsAI');
       } else if (selectedMode === 'multiplayer') {
-        navigate('/gamestartsPvP');
+        navigate('/gameform');
       }
     }
+  };
+
+  const handleJoinRoom = () => {
+    setShowJoinRoom(true);
+  };
+
+  const handleJoinRoomSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!roomCode.trim() || !playerEmail.trim()) {
+      setJoinError('Please enter both room code and email');
+      return;
+    }
+
+    if (roomCode.length !== 3 || !/^\d{3}$/.test(roomCode)) {
+      setJoinError('Room code must be a 3-digit number');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail)) {
+      setJoinError('Please enter a valid email address');
+      return;
+    }
+
+    setIsJoining(true);
+    setJoinError('');
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/game/room/${roomCode}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gmail: playerEmail.trim()
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Successfully joined room, navigate to game
+        navigate(`/gamestartsPvP?roomCode=${roomCode}&email=${playerEmail.trim()}`);
+      } else {
+        setJoinError(result.message || 'Failed to join room');
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      setJoinError('Network error. Please try again.');
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleCloseJoinModal = () => {
+    setShowJoinRoom(false);
+    setRoomCode('');
+    setPlayerEmail('');
+    setJoinError('');
   };
 
   const handleBackToHome = () => {
@@ -144,6 +212,37 @@ const GameModeSelection = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Multiplayer-specific action buttons */}
+              {mode.id === 'multiplayer' && (
+                <div className="multiplayer-actions">
+                  <motion.button
+                    className="action-btn create-room-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/gameform');
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaPlus />
+                    <span>Create Room</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    className="action-btn join-room-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleJoinRoom();
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaSignInAlt />
+                    <span>Join Room</span>
+                  </motion.button>
+                </div>
+              )}
             </motion.div>
           ))}
         </motion.div>
@@ -180,6 +279,102 @@ const GameModeSelection = () => {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Join Room Modal */}
+      <AnimatePresence>
+        {showJoinRoom && (
+          <div className="modal-overlay">
+            <motion.div 
+              className="join-room-modal"
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 50 }}
+              transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+            >
+              <div className="modal-header">
+                <h2>Join Game Room</h2>
+                <button className="close-modal-btn" onClick={handleCloseJoinModal}>
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={handleJoinRoomSubmit} className="join-room-form">
+                <div className="form-group">
+                  <label htmlFor="roomCode">Room Code</label>
+                  <input
+                    type="text"
+                    id="roomCode"
+                    value={roomCode}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                      setRoomCode(value);
+                      if (joinError) setJoinError('');
+                    }}
+                    placeholder="Enter 3-digit room code"
+                    maxLength="3"
+                    className={joinError ? 'error' : ''}
+                    disabled={isJoining}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="playerEmail">Your Email</label>
+                  <input
+                    type="email"
+                    id="playerEmail"
+                    value={playerEmail}
+                    onChange={(e) => {
+                      setPlayerEmail(e.target.value);
+                      if (joinError) setJoinError('');
+                    }}
+                    placeholder="Enter your email address"
+                    className={joinError ? 'error' : ''}
+                    disabled={isJoining}
+                  />
+                </div>
+
+                {joinError && (
+                  <motion.div 
+                    className="join-error"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {joinError}
+                  </motion.div>
+                )}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="btn-cancel"
+                    onClick={handleCloseJoinModal}
+                    disabled={isJoining}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-join"
+                    disabled={isJoining || !roomCode || !playerEmail}
+                  >
+                    {isJoining ? (
+                      <>
+                        <FaSpinner className="spinning" />
+                        <span>Joining...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaSignInAlt />
+                        <span>Join Room</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

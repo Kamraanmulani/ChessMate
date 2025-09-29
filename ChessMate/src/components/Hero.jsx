@@ -60,7 +60,7 @@ const Hero = ({ onStartPlaying }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <div className="chess-board">
+          {/* <div className="chess-board">
             <div className="board-grid">
               {Array.from({ length: 64 }).map((_, index) => (
                 <div 
@@ -76,7 +76,7 @@ const Hero = ({ onStartPlaying }) => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </motion.div>
       </div>
     </section>
